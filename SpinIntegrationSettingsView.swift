@@ -35,6 +35,13 @@ struct SpinIntegrationSettingsView: View {
     @State private var isTestingConnection = false
     @State private var isClosingBatch = false
 
+    // Per-action error messages. Kept local (rather than reading the shared
+    // connector.lastError directly) so a failure in one section doesn't bleed
+    // its message into the others.
+    @State private var connectionError: String?
+    @State private var saleError: String?
+    @State private var batchError: String?
+
     private var configured: Bool {
         !baseURL.trimmingCharacters(in: .whitespaces).isEmpty
             && !registerID.trimmingCharacters(in: .whitespaces).isEmpty
@@ -124,7 +131,7 @@ struct SpinIntegrationSettingsView: View {
                 }
             }
 
-            if let error = connector.lastError, connectionResult == nil {
+            if let error = connectionError {
                 Text(error).font(.caption).foregroundColor(.red)
             }
         }
@@ -167,7 +174,7 @@ struct SpinIntegrationSettingsView: View {
                 .font(.system(size: 13))
             }
 
-            if let error = connector.lastError {
+            if let error = saleError {
                 Text(error).font(.caption).foregroundColor(.red)
             }
 
@@ -212,6 +219,10 @@ struct SpinIntegrationSettingsView: View {
                 if let msg = batch.message {
                     Text(msg).font(.caption).foregroundColor(.secondary)
                 }
+            }
+
+            if let error = batchError {
+                Text(error).font(.caption).foregroundColor(.red)
             }
         }
     }
@@ -263,24 +274,48 @@ struct SpinIntegrationSettingsView: View {
 
     private func runTestConnection() async {
         isTestingConnection = true
+        connectionError = nil
+        connectionResult = nil
         defer { isTestingConnection = false }
-        if case .success(let result) = await connector.testConnection() {
+        switch await connector.testConnection() {
+        case .success(let result):
             connectionResult = result
+        case .failure(let error):
+            connectionError = error.localizedDescription
         }
     }
 
     private func runTestSale() async {
         let normalized = testAmountText.replacingOccurrences(of: ",", with: ".")
-        guard let amount = Double(normalized), amount > 0 else { return }
+        guard let amount = Double(normalized), amount > 0 else {
+            saleError = t(
+                "Enter a valid amount greater than zero.",
+                "Entrez un montant valide supérieur à zéro."
+            )
+            return
+        }
+        saleError = nil
         let orderId = "DUOPAY-TEST-\(Int(Date().timeIntervalSince1970))"
-        await connector.chargeSale(amount: amount, orderId: orderId, performedBy: "DUOPAY Settings")
+        switch await connector.chargeSale(amount: amount, orderId: orderId, performedBy: "DUOPAY Settings") {
+        case .success:
+            // A processed-but-declined sale still returns .success; its message
+            // lives in connector.lastError.
+            saleError = connector.lastError
+        case .failure(let error):
+            saleError = error.localizedDescription
+        }
     }
 
     private func runCloseBatch() async {
         isClosingBatch = true
+        batchError = nil
+        batchResult = nil
         defer { isClosingBatch = false }
-        if case .success(let result) = await connector.closeBatch() {
+        switch await connector.closeBatch() {
+        case .success(let result):
             batchResult = result
+        case .failure(let error):
+            batchError = error.localizedDescription
         }
     }
 
