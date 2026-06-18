@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUOPAY — POS Web App</title>
+<style>
+  :root {
+    --blue: #0A84FF;
+    --red: #FF3B30;
+    --green: #34C759;
+    --orange: #FF9F0A;
+    --gray: #8E8E93;
+    --bg-light: #F2F2F7;
+    --bg-dark: #1C1C1E;
+    --border: #E5E5EA;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, "SF Pro Display", "Segoe UI", sans-serif;
+    background: #FFFFFF;
+    color: #000;
+  }
+
+  .container {
+    display: flex;
+    height: 100vh;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 200px;
+    background: var(--bg-dark);
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    color: var(--blue);
+  }
+
+  .sidebar-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: #fff;
+    padding: 12px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    transition: all .2s;
+  }
+
+  .sidebar-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .sidebar-btn.active {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .sidebar-btn.spin-enabled {
+    border-left: 3px solid var(--blue);
+  }
+
+  .sidebar-btn.pax-enabled {
+    border-left: 3px solid var(--orange);
+  }
+
+  .sidebar-spacer {
+    flex: 1;
+  }
+
+  /* ===== MAIN ===== */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-light);
+  }
+
+  .header {
+    background: #fff;
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .header-info {
+    font-size: 13px;
+    color: var(--gray);
+  }
+
+  /* ===== CONTENT ===== */
+  .content {
+    flex: 1;
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .section {
+    display: none;
+    width: 100%;
+  }
+
+  .section.active {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ===== CHECKOUT ===== */
+  .checkout-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+  }
+
+  .products-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .product-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+  }
+
+  .product-btn:hover {
+    border-color: var(--blue);
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.1);
+  }
+
+  .product-emoji {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  .product-name {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .product-price {
+    font-size: 13px;
+    color: var(--blue);
+    font-weight: 700;
+  }
+
+  .cart-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .cart-title {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .cart-items {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #333;
+  }
+
+  .cart-item-name {
+    flex: 1;
+  }
+
+  .cart-item-qty {
+    color: var(--gray);
+    margin: 0 8px;
+  }
+
+  .cart-item-price {
+    font-weight: 600;
+    min-width: 50px;
+    text-align: right;
+  }
+
+  .cart-totals {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    color: var(--gray);
+  }
+
+  .totals-row.total {
+    color: #000;
+    font-weight: 700;
+    font-size: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+
+  .payment-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #0066CC;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: #fff;
+    color: var(--blue);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* ===== FORMS ===== */
+  .form-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 600px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #000;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.1);
+  }
+
+  .form-hint {
+    font-size: 12px;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  /* ===== STATUS BADGE ===== */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: .5px;
+  }
+
+  .badge.approved {
+    background: rgba(52, 199, 89, 0.15);
+    color: var(--green);
+  }
+
+  .badge.declined {
+    background: rgba(255, 59, 48, 0.15);
+    color: var(--red);
+  }
+
+  .badge.pending {
+    background: rgba(10, 132, 255, 0.15);
+    color: var(--blue);
+  }
+
+  /* ===== MODAL ===== */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal.show {
+    display: flex;
+  }
+
+  .modal-content {
+    background: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--gray);
+    cursor: pointer;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  /* ===== ALERTS ===== */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .alert.success {
+    background: rgba(52, 199, 89, 0.15);
+    color: var(--green);
+    border: 1px solid rgba(52, 199, 89, 0.3);
+  }
+
+  .alert.error {
+    background: rgba(255, 59, 48, 0.15);
+    color: var(--red);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+  }
+
+  .alert.info {
+    background: rgba(10, 132, 255, 0.15);
+    color: var(--blue);
+    border: 1px solid rgba(10, 132, 255, 0.3);
+  }
+
+  /* ===== TOGGLE ===== */
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #ccc;
+    border-radius: 28px;
+    transition: .3s;
+    cursor: pointer;
+  }
+
+  .toggle-slider:before {
+    content: '';
+    position: absolute;
+    height: 24px;
+    width: 24px;
+    left: 2px;
+    top: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .3s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  input:checked + .toggle-slider {
+    background: var(--green);
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+  }
+
+  /* ===== SPINNER ===== */
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .mono {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    color: var(--gray);
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 60px;
+      padding: 10px;
+    }
+
+    .sidebar-btn {
+      padding: 8px 6px;
+      font-size: 10px;
+    }
+
+    .checkout-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .products-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cart-panel {
+      max-width: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">DUOPAY</div>
+    <button class="sidebar-btn active" onclick="switchSection('checkout')">🛒 Checkout</button>
+    <button class="sidebar-btn" onclick="switchSection('transactions')">📋 Transactions</button>
+    <button class="sidebar-btn" onclick="switchSection('spin')">📡 SPIn Config</button>
+    <button class="sidebar-btn" onclick="switchSection('pax')">🌐 PAX Config</button>
+    <button class="sidebar-btn" onclick="switchSection('settings')">⚙️ Settings</button>
+    <div class="sidebar-spacer"></div>
+    <button class="sidebar-btn" onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="header">
+      <h1 id="headerTitle">Checkout</h1>
+      <div class="header-info">
+        <div id="terminalStatus">-</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- CHECKOUT SECTION -->
+      <div id="checkout" class="section active">
+        <div class="checkout-grid">
+          <div class="products-panel">
+            <h3>Products</h3>
+            <div class="products-grid" id="productsGrid"></div>
+          </div>
+          <div class="cart-panel">
+            <div class="cart-title">Cart</div>
+            <div class="cart-items" id="cartItems"></div>
+            <div class="cart-totals">
+              <div class="totals-row">
+                <span>Subtotal</span>
+                <span id="subtotal">$0.00</span>
+              </div>
+              <div class="totals-row">
+                <span>Tax (5%)</span>
+                <span id="tax">$0.00</span>
+              </div>
+              <div class="totals-row total">
+                <span>Total</span>
+                <span id="total">$0.00</span>
+              </div>
+            </div>
+            <div class="payment-buttons">
+              <button class="btn-primary" id="chargeBtn" onclick="showPaymentModal()">Charge</button>
+              <button class="btn-secondary" onclick="clearCart()">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSACTIONS SECTION -->
+      <div id="transactions" class="section">
+        <div class="form-card">
+          <h3>Recent Transactions</h3>
+          <div id="transactionsList" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;"></div>
+        </div>
+      </div>
+
+      <!-- SPIN CONFIG SECTION -->
+      <div id="spin" class="section">
+        <div class="form-card">
+          <h3>SPIn Connector Configuration</h3>
+          <div class="form-group">
+            <label>Enable SPIn</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="spinEnabled" onchange="updateSpinConfig()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Connector URL</label>
+            <input type="text" id="spinUrl" placeholder="https://connector.example.com" onchange="updateSpinConfig()">
+            <div class="form-hint">e.g. https://connector.duopay.app</div>
+          </div>
+          <div class="form-group">
+            <label>Register ID</label>
+            <input type="text" id="spinRegister" placeholder="DEMO-REG-01" onchange="updateSpinConfig()">
+            <div class="form-hint">SPIn RegisterId from Dejavoo/iPOSpays portal</div>
+          </div>
+          <div class="form-group">
+            <label>API Key (optional)</label>
+            <input type="password" id="spinApiKey" placeholder="••••••••" onchange="updateSpinConfig()">
+          </div>
+          <button class="btn-primary" onclick="testSpinConnection()">
+            <span id="spinTestBtn">Test Connection</span>
+          </button>
+          <div id="spinTestResult" style="margin-top: 12px;"></div>
+        </div>
+      </div>
+
+      <!-- PAX CONFIG SECTION -->
+      <div id="pax" class="section">
+        <div class="form-card">
+          <h3>PAX Terminal Configuration</h3>
+          <div class="form-group">
+            <label>Enable PAX</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="paxEnabled" onchange="updatePaxConfig()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Terminal IP Address</label>
+            <input type="text" id="paxIp" placeholder="192.168.1.100" onchange="updatePaxConfig()">
+            <div class="form-hint">Local network IP of PAX terminal</div>
+          </div>
+          <div class="form-group">
+            <label>Port</label>
+            <input type="number" id="paxPort" placeholder="10001" value="10001" onchange="updatePaxConfig()">
+            <div class="form-hint">ISO 8583 port, typically 10001</div>
+          </div>
+          <div class="form-group">
+            <label>Timeout (seconds)</label>
+            <input type="number" id="paxTimeout" placeholder="30" value="30" onchange="updatePaxConfig()">
+          </div>
+          <button class="btn-primary" onclick="testPaxConnection()">
+            <span id="paxTestBtn">Test Connection</span>
+          </button>
+          <div id="paxTestResult" style="margin-top: 12px;"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS SECTION -->
+      <div id="settings" class="section">
+        <div class="form-card">
+          <h3>Settings</h3>
+          <div class="form-group">
+            <label>Language</label>
+            <select id="language" onchange="updateLanguage()">
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tax Rate (%)</label>
+            <input type="number" id="taxRate" placeholder="5" value="5" step="0.1" onchange="updateTaxRate()">
+          </div>
+          <div class="form-group">
+            <label>Terminal Name</label>
+            <input type="text" id="terminalName" placeholder="DUOPAY-001" onchange="updateTerminalName()">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div id="paymentModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Payment</h2>
+      <button class="modal-close" onclick="closePaymentModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Amount</label>
+        <input type="text" id="paymentAmount" readonly>
+      </div>
+      <div class="form-group">
+        <label>Tip</label>
+        <input type="number" id="tipAmount" placeholder="0.00" value="0">
+      </div>
+      <div class="form-group">
+        <label>Payment Method</label>
+        <select id="paymentMethod">
+          <option value="spin">SPIn Dejavoo</option>
+          <option value="pax">PAX Terminal</option>
+          <option value="cash">Cash</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div id="paymentStatus"></div>
+      <button class="btn-primary" id="processPaymentBtn" onclick="processPayment()">Process Payment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== STATE =====
+  const state = {
+    cart: [],
+    transactions: [],
+    language: localStorage.getItem('language') || 'en',
+    taxRate: parseFloat(localStorage.getItem('taxRate') || '5'),
+    terminalName: localStorage.getItem('terminalName') || 'DUOPAY-001',
+    spin: {
+      enabled: localStorage.getItem('spin_enabled') === 'true',
+      url: localStorage.getItem('spin_url') || '',
+      register: localStorage.getItem('spin_register') || '',
+      apiKey: localStorage.getItem('spin_api_key') || '',
+    },
+    pax: {
+      enabled: localStorage.getItem('pax_enabled') === 'true',
+      ip: localStorage.getItem('pax_ip') || '',
+      port: parseInt(localStorage.getItem('pax_port') || '10001'),
+      timeout: parseInt(localStorage.getItem('pax_timeout') || '30'),
+    }
+  };
+
+  // ===== PRODUCTS =====
+  const products = [
+    { id: 1, name: 'Espresso', emoji: '☕', price: 3.25 },
+    { id: 2, name: 'Latte', emoji: '🥛', price: 4.75 },
+    { id: 3, name: 'Mocha', emoji: '🍫', price: 5.00 },
+    { id: 4, name: 'Croissant', emoji: '🥐', price: 3.00 },
+    { id: 5, name: 'Muffin', emoji: '🧁', price: 2.75 },
+    { id: 6, name: 'Bagel', emoji: '🥯', price: 3.50 },
+  ];
+
+  // ===== INIT =====
+  function init() {
+    renderProducts();
+    loadConfig();
+    updateCart();
+    updateTerminalStatus();
+  }
+
+  function renderProducts() {
+    const grid = document.getElementById('productsGrid');
+    grid.innerHTML = products.map(p => `
+      <button class="product-btn" onclick="addToCart(${p.id})">
+        <div class="product-emoji">${p.emoji}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">$${p.price.toFixed(2)}</div>
+      </button>
+    `).join('');
+  }
+
+  function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    const existing = state.cart.find(c => c.id === productId);
+    if (existing) {
+      existing.qty++;
+    } else {
+      state.cart.push({ ...product, qty: 1 });
+    }
+    updateCart();
+  }
+
+  function removeFromCart(productId) {
+    state.cart = state.cart.filter(c => c.id !== productId);
+    updateCart();
+  }
+
+  function clearCart() {
+    state.cart = [];
+    updateCart();
+  }
+
+  function updateCart() {
+    const items = document.getElementById('cartItems');
+    const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const tax = subtotal * (state.taxRate / 100);
+    const total = subtotal + tax;
+
+    items.innerHTML = state.cart.map(item => `
+      <div class="cart-item">
+        <div class="cart-item-name">${item.name}</div>
+        <span class="cart-item-qty">×${item.qty}</span>
+        <div class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</div>
+        <button class="btn-secondary" style="margin-left: 4px; padding: 2px 6px;" onclick="removeFromCart(${item.id})">−</button>
+      </div>
+    `).join('');
+
+    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+    document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+  }
+
+  // ===== PAYMENT =====
+  function showPaymentModal() {
+    if (state.cart.length === 0) {
+      alert('Cart is empty');
+      return;
+    }
+    const total = calculateTotal();
+    document.getElementById('paymentAmount').value = total.toFixed(2);
+    document.getElementById('tipAmount').value = '0';
+    document.getElementById('paymentStatus').innerHTML = '';
+    document.getElementById('paymentModal').classList.add('show');
+  }
+
+  function closePaymentModal() {
+    document.getElementById('paymentModal').classList.remove('show');
+  }
+
+  function calculateTotal() {
+    const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    return subtotal * (1 + state.taxRate / 100);
+  }
+
+  async function processPayment() {
+    const method = document.getElementById('paymentMethod').value;
+    const amount = parseFloat(document.getElementById('paymentAmount').value);
+    const tip = parseFloat(document.getElementById('tipAmount').value) || 0;
+    const statusDiv = document.getElementById('paymentStatus');
+    const btn = document.getElementById('processPaymentBtn');
+
+    btn.disabled = true;
+    statusDiv.innerHTML = '<div class="alert info"><span class="spinner"></span> Processing...</div>';
+
+    try {
+      let result;
+      if (method === 'spin' && state.spin.enabled) {
+        result = await processSpin(amount, tip);
+      } else if (method === 'pax' && state.pax.enabled) {
+        result = await processPax(amount, tip);
+      } else if (method === 'cash') {
+        result = { approved: true, method: 'Cash' };
+      } else {
+        result = { approved: true, method: 'Other' };
+      }
+
+      if (result.approved) {
+        statusDiv.innerHTML = `<div class="alert success">✓ Payment approved</div>`;
+        state.transactions.push({
+          id: Date.now(),
+          amount: (amount + tip).toFixed(2),
+          method: result.method,
+          timestamp: new Date().toLocaleString(),
+          status: 'APPROVED'
+        });
+        setTimeout(() => {
+          clearCart();
+          closePaymentModal();
+        }, 1500);
+      } else {
+        statusDiv.innerHTML = `<div class="alert error">✗ Payment declined</div>`;
+      }
+    } catch (err) {
+      statusDiv.innerHTML = `<div class="alert error">Error: ${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function processSpin(amount, tip) {
+    if (!state.spin.enabled || !state.spin.url || !state.spin.register) {
+      throw new Error('SPIn not configured');
+    }
+
+    const body = {
+      registerId: state.spin.register,
+      foodteriaOrderId: `web-${Date.now()}`,
+      amount: amount.toFixed(2),
+      tip: tip > 0 ? tip.toFixed(2) : undefined,
+      paymentType: 'Credit'
+    };
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+
+    if (state.spin.apiKey) {
+      headers['x-api-key'] = state.spin.apiKey;
+    }
+
+    const response = await fetch(`${state.spin.url}/v1/payments/sale`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+    return {
+      approved: data.status === 'APPROVED',
+      method: 'Card (SPIn)',
+      data
+    };
+  }
+
+  async function processPax(amount, tip) {
+    // Simulated PAX processing (local network would require backend proxy)
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve({
+          approved: Math.random() > 0.1, // 90% success rate for demo
+          method: 'Card (PAX)',
+        });
+      }, 1500);
+    });
+  }
+
+  // ===== CONFIG =====
+  function loadConfig() {
+    document.getElementById('spinEnabled').checked = state.spin.enabled;
+    document.getElementById('spinUrl').value = state.spin.url;
+    document.getElementById('spinRegister').value = state.spin.register;
+    document.getElementById('spinApiKey').value = state.spin.apiKey;
+
+    document.getElementById('paxEnabled').checked = state.pax.enabled;
+    document.getElementById('paxIp').value = state.pax.ip;
+    document.getElementById('paxPort').value = state.pax.port;
+    document.getElementById('paxTimeout').value = state.pax.timeout;
+
+    document.getElementById('language').value = state.language;
+    document.getElementById('taxRate').value = state.taxRate;
+    document.getElementById('terminalName').value = state.terminalName;
+  }
+
+  function updateSpinConfig() {
+    state.spin.enabled = document.getElementById('spinEnabled').checked;
+    state.spin.url = document.getElementById('spinUrl').value;
+    state.spin.register = document.getElementById('spinRegister').value;
+    state.spin.apiKey = document.getElementById('spinApiKey').value;
+
+    localStorage.setItem('spin_enabled', state.spin.enabled);
+    localStorage.setItem('spin_url', state.spin.url);
+    localStorage.setItem('spin_register', state.spin.register);
+    localStorage.setItem('spin_api_key', state.spin.apiKey);
+
+    updateSidebarStatus();
+  }
+
+  function updatePaxConfig() {
+    state.pax.enabled = document.getElementById('paxEnabled').checked;
+    state.pax.ip = document.getElementById('paxIp').value;
+    state.pax.port = parseInt(document.getElementById('paxPort').value);
+    state.pax.timeout = parseInt(document.getElementById('paxTimeout').value);
+
+    localStorage.setItem('pax_enabled', state.pax.enabled);
+    localStorage.setItem('pax_ip', state.pax.ip);
+    localStorage.setItem('pax_port', state.pax.port);
+    localStorage.setItem('pax_timeout', state.pax.timeout);
+
+    updateSidebarStatus();
+  }
+
+  function updateLanguage() {
+    state.language = document.getElementById('language').value;
+    localStorage.setItem('language', state.language);
+  }
+
+  function updateTaxRate() {
+    state.taxRate = parseFloat(document.getElementById('taxRate').value);
+    localStorage.setItem('taxRate', state.taxRate);
+    updateCart();
+  }
+
+  function updateTerminalName() {
+    state.terminalName = document.getElementById('terminalName').value;
+    localStorage.setItem('terminalName', state.terminalName);
+  }
+
+  async function testSpinConnection() {
+    const btn = document.getElementById('spinTestBtn');
+    const resultDiv = document.getElementById('spinTestResult');
+    
+    if (!state.spin.url || !state.spin.register) {
+      resultDiv.innerHTML = '<div class="alert error">Please fill in URL and Register ID</div>';
+      return;
+    }
+
+    btn.innerHTML = '<span class="spinner"></span>';
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (state.spin.apiKey) headers['x-api-key'] = state.spin.apiKey;
+
+      const response = await fetch(`${state.spin.url}/v1/registers/${state.spin.register}/test-connection`, {
+        method: 'POST',
+        headers
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        resultDiv.innerHTML = `<div class="alert success">✓ Connected to ${data.spinRegisterId || state.spin.register}</div>`;
+      } else {
+        resultDiv.innerHTML = `<div class="alert error">✗ Connection failed (HTTP ${response.status})</div>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = `<div class="alert error">✗ ${err.message}</div>`;
+    } finally {
+      btn.innerHTML = 'Test Connection';
+    }
+  }
+
+  async function testPaxConnection() {
+    const btn = document.getElementById('paxTestBtn');
+    const resultDiv = document.getElementById('paxTestResult');
+
+    if (!state.pax.ip) {
+      resultDiv.innerHTML = '<div class="alert error">Please enter terminal IP address</div>';
+      return;
+    }
+
+    btn.innerHTML = '<span class="spinner"></span>';
+    // Simulated PAX connection test (browser can't directly access local network)
+    setTimeout(() => {
+      resultDiv.innerHTML = '<div class="alert info">PAX connection test requires backend proxy (browser security restriction)</div>';
+      btn.innerHTML = 'Test Connection';
+    }, 500);
+  }
+
+  function updateSidebarStatus() {
+    // Update sidebar to show which terminalsare enabled
+    const spinBtn = Array.from(document.querySelectorAll('.sidebar-btn')).find(b => b.textContent.includes('SPIn'));
+    const paxBtn = Array.from(document.querySelectorAll('.sidebar-btn')).find(b => b.textContent.includes('PAX'));
+
+    if (spinBtn) spinBtn.classList.toggle('spin-enabled', state.spin.enabled);
+    if (paxBtn) paxBtn.classList.toggle('pax-enabled', state.pax.enabled);
+  }
+
+  function updateTerminalStatus() {
+    let status = 'Terminals: ';
+    const enabled = [];
+    if (state.spin.enabled && state.spin.url) enabled.push('SPIn ✓');
+    if (state.pax.enabled && state.pax.ip) enabled.push('PAX ✓');
+    if (enabled.length === 0) enabled.push('None configured');
+    document.getElementById('terminalStatus').textContent = status + enabled.join(' | ');
+  }
+
+  function switchSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+
+    // Show selected section
+    document.getElementById(sectionId).classList.add('active');
+    event.target.classList.add('active');
+
+    // Update header
+    const titles = {
+      checkout: 'Checkout',
+      transactions: 'Transactions',
+      spin: 'SPIn Configuration',
+      pax: 'PAX Configuration',
+      settings: 'Settings'
+    };
+    document.getElementById('headerTitle').textContent = titles[sectionId] || sectionId;
+  }
+
+  function logout() {
+    if (confirm('Logout?')) {
+      localStorage.clear();
+      location.reload();
+    }
+  }
+
+  // Initialize on load
+  window.addEventListener('load', init);
+</script>
+</body>
+</html>
