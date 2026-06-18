@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var showingManualEntry = false
     @State private var showingTransactions = false
     @State private var showingSpinSettings = false
+    @State private var showingPaxSettings = false
 
     @State private var showingPunchClock = false
     @State private var showingCheckoutSheet = false
@@ -37,6 +38,7 @@ struct ContentView: View {
     @State private var posConnector: POSConnector = SquareConnector()
     @StateObject private var stripeConnector = StripeConnector()
     @StateObject private var spinConnector = SpinPOSConnector()
+    @StateObject private var paxConnector = PaxPOSConnector()
 
     // Sidebar Animation State
     @State private var isSidebarOpen = false
@@ -64,6 +66,10 @@ struct ContentView: View {
     /// "spin_integration" key is added to the app's localization tables.
     private var spinSidebarLabel: String {
         selectedLanguage == "fr" ? "Intégration SPIn" : "SPIn Integration"
+    }
+
+    private var paxSidebarLabel: String {
+        selectedLanguage == "fr" ? "Terminal PAX" : "PAX Terminal"
     }
 
     var body: some View {
@@ -116,6 +122,10 @@ struct ContentView: View {
                     
                     SidebarButton(icon: "wave.3.right.circle.fill", label: spinSidebarLabel, color: SpinConnectorConfig.isEnabled ? .blue : .primary) {
                         showingSpinSettings = true
+                    }
+                    
+                    SidebarButton(icon: "network", label: paxSidebarLabel, color: PaxConnectorConfig.isEnabled ? .blue : .primary) {
+                        showingPaxSettings = true
                     }
                     
                     Spacer()
@@ -262,6 +272,9 @@ struct ContentView: View {
         .sheet(isPresented: $showingSpinSettings) {
             SpinIntegrationSettingsView(connector: spinConnector)
         }
+        .sheet(isPresented: $showingPaxSettings) {
+            PaxTerminalSettingsView(connector: paxConnector)
+        }
         .alert(isPresented: $showingApplePayAlert) {
             Alert(title: Text("Apple Pay"), message: Text(applePayMessage ?? ""), dismissButton: .default(Text("OK")))
         }
@@ -336,7 +349,7 @@ struct ContentView: View {
     func payViaPOS(amount: Double) {
         Task {
             // SPIn/Dejavoo path: when configured + enabled, charge the terminal
-            // through the Foodteria SPIn connector instead of posConnector.
+            // through the Foodteria SPIn connector.
             if SpinConnectorConfig.isEnabled && SpinConnectorConfig.isConfigured {
                 let orderId = "DUOPAY-\(transactionService.transactions.count + 1)-\(Int(Date().timeIntervalSince1970))"
                 switch await spinConnector.chargeSale(amount: amount, orderId: orderId) {
@@ -344,8 +357,21 @@ struct ContentView: View {
                     if record.status.isSuccessful {
                         completePayment(method: "Card (SPIn)", tip: record.tipValue)
                     }
-                    // Declined / timeout / error: spinConnector.lastError has details
-                    // for the UI; cart is left intact so the cashier can retry.
+                case .failure:
+                    break
+                }
+                return
+            }
+
+            // PAX A-series path: when configured + enabled, charge directly
+            // via local network Ethernet to the PAX terminal.
+            if PaxConnectorConfig.isEnabled && PaxConnectorConfig.isConfigured {
+                let orderId = "DUOPAY-\(transactionService.transactions.count + 1)-\(Int(Date().timeIntervalSince1970))"
+                switch await paxConnector.chargeSale(amount: amount, orderId: orderId) {
+                case .success(let transaction):
+                    if transaction.approved {
+                        completePayment(method: "Card (PAX)", tip: Double(truncating: transaction.tipAmount as NSDecimalNumber) / 100)
+                    }
                 case .failure:
                     break
                 }
