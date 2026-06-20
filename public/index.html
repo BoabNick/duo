@@ -476,8 +476,6 @@
     <div class="sidebar-logo">DUOPAY</div>
     <button class="sidebar-btn active" onclick="switchSection('checkout')">🛒 Checkout</button>
     <button class="sidebar-btn" onclick="switchSection('transactions')">📋 Transactions</button>
-    <button class="sidebar-btn" onclick="switchSection('spin')">📡 SPIn</button>
-    <button class="sidebar-btn" onclick="switchSection('pax')">🌐 PAX</button>
     <button class="sidebar-btn" onclick="switchSection('settings')">⚙️ Settings</button>
     <div class="sidebar-spacer"></div>
     <button class="sidebar-btn" onclick="logout()">🚪 Logout</button>
@@ -530,10 +528,24 @@
         </div>
       </div>
 
-      <!-- SPIN CONFIG SECTION -->
-      <div id="spin" class="section">
+      <!-- SETTINGS SECTION -->
+      <div id="settings" class="section">
+        <!-- General settings -->
         <div class="form-card">
-          <h3>SPIn Configuration</h3>
+          <h3>General</h3>
+          <div class="form-group">
+            <label>Tax Rate (%)</label>
+            <input type="number" id="taxRate" placeholder="5" value="5" step="0.1" onchange="updateTaxRate()">
+          </div>
+          <div class="form-group">
+            <label>Terminal Name</label>
+            <input type="text" id="terminalName" placeholder="DUOPAY-001" onchange="updateTerminalName()">
+          </div>
+        </div>
+
+        <!-- SPIn settings -->
+        <div class="form-card">
+          <h3>📡 SPIn Configuration</h3>
           <div class="form-group">
             <label>Enable SPIn</label>
             <label class="toggle-switch">
@@ -556,12 +568,10 @@
           <button class="btn-primary" onclick="testSpinConnection()">Test Connection</button>
           <div id="spinTestResult" style="margin-top: 12px;"></div>
         </div>
-      </div>
 
-      <!-- PAX CONFIG SECTION -->
-      <div id="pax" class="section">
+        <!-- PAX settings -->
         <div class="form-card">
-          <h3>PAX Configuration</h3>
+          <h3>🌐 PAX Configuration</h3>
           <div class="form-group">
             <label>Enable PAX</label>
             <label class="toggle-switch">
@@ -579,21 +589,6 @@
           </div>
           <button class="btn-primary" onclick="testPaxConnection()">Test Connection</button>
           <div id="paxTestResult" style="margin-top: 12px;"></div>
-        </div>
-      </div>
-
-      <!-- SETTINGS SECTION -->
-      <div id="settings" class="section">
-        <div class="form-card">
-          <h3>Settings</h3>
-          <div class="form-group">
-            <label>Tax Rate (%)</label>
-            <input type="number" id="taxRate" placeholder="5" value="5" step="0.1" onchange="updateTaxRate()">
-          </div>
-          <div class="form-group">
-            <label>Terminal Name</label>
-            <input type="text" id="terminalName" placeholder="DUOPAY-001" onchange="updateTerminalName()">
-          </div>
         </div>
       </div>
     </div>
@@ -897,7 +892,7 @@
     document.getElementById(sectionId).classList.add('active');
     event.target.classList.add('active');
 
-    const titles = { checkout: 'Checkout', transactions: 'Transactions', spin: 'SPIn Setup', pax: 'PAX Setup', settings: 'Settings' };
+    const titles = { checkout: 'Checkout', transactions: 'Transactions', settings: 'Settings' };
     document.getElementById('headerTitle').textContent = titles[sectionId] || sectionId;
 
     if (sectionId === 'transactions') loadTransactions();
