@@ -416,6 +416,44 @@ app.post('/api/payments/spin', async (req, res) => {
   });
 });
 
+
+// ===== Deploy Webhook =====
+// Called by GitHub Actions on push to main — triggers a git pull + restart
+const crypto = require('crypto');
+
+app.post('/api/deploy', express.raw({type: 'application/json'}), (req, res) => {
+  const secret = process.env.DEPLOY_SECRET || 'duopay-deploy-secret';
+  const signature = req.headers['x-hub-signature-256'];
+  
+  if (signature) {
+    const hmac = crypto.createHmac('sha256', secret);
+    const digest = 'sha256=' + hmac.update(req.body).digest('hex');
+    if (signature !== digest) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+  }
+  
+  const body = JSON.parse(req.body);
+  
+  // Only deploy on push to main branch
+  if (body.ref && body.ref !== 'refs/heads/main') {
+    return res.json({ message: 'Skipping non-main branch', ref: body.ref });
+  }
+  
+  res.json({ message: 'Deployment triggered', timestamp: new Date().toISOString() });
+  
+  // Run deployment asynchronously
+  const { exec } = require('child_process');
+  exec('/opt/duopay/duopay-update.sh', { timeout: 120000 }, (error, stdout, stderr) => {
+    if (error) {
+      console.error('Deploy error:', error.message);
+      console.error('stderr:', stderr);
+    } else {
+      console.log('Deploy success:', stdout);
+    }
+  });
+});
+
 // ===== Error handler =====
 app.use((err, req, res, next) => {
   console.error(err.stack);
