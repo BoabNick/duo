@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="DUOPAY — Point of Sale System">
+<meta name="theme-color" content="#0A84FF">
 <title>DUOPAY — POS System</title>
 <style>
   :root {
@@ -14,35 +16,29 @@
     --bg-light: #F2F2F7;
     --bg-dark: #1C1C1E;
     --border: #E5E5EA;
+    --sidebar-w: 200px;
   }
 
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: -apple-system, "SF Pro Display", "Segoe UI", sans-serif;
-    background: #FFFFFF;
+    background: #fff;
     color: #000;
   }
 
-  .container {
-    display: flex;
-    height: 100vh;
-  }
+  .container { display: flex; height: 100vh; }
 
   /* ===== SIDEBAR ===== */
   .sidebar {
-    width: 200px;
+    width: var(--sidebar-w);
     background: var(--bg-dark);
     color: #fff;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    border-right: 1px solid var(--border);
+    flex-shrink: 0;
     overflow-y: auto;
   }
 
@@ -52,6 +48,8 @@
     letter-spacing: 2px;
     margin-bottom: 30px;
     color: var(--blue);
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .sidebar-btn {
@@ -64,29 +62,17 @@
     font-size: 13px;
     font-weight: 500;
     text-align: left;
-    transition: all .2s;
+    transition: background .2s;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
-  .sidebar-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .sidebar-btn.active {
-    background: var(--blue);
-    color: #fff;
-  }
-
-  .sidebar-spacer {
-    flex: 1;
-  }
+  .sidebar-btn:hover { background: rgba(255,255,255,.1); }
+  .sidebar-btn.active { background: var(--blue); }
+  .sidebar-spacer { flex: 1; }
 
   /* ===== MAIN ===== */
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-light);
-  }
+  .main { flex: 1; display: flex; flex-direction: column; background: var(--bg-light); min-width: 0; }
 
   .header {
     background: #fff;
@@ -95,38 +81,23 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
   }
 
-  .header h1 {
-    font-size: 24px;
-    font-weight: 700;
-  }
+  .header h1 { font-size: 24px; font-weight: 700; }
 
   /* ===== CONTENT ===== */
-  .content {
-    flex: 1;
-    display: flex;
-    gap: 20px;
-    padding: 20px;
-    overflow-y: auto;
-  }
+  .content { flex: 1; padding: 20px; overflow-y: auto; }
 
-  .section {
-    display: none;
-    width: 100%;
-  }
-
-  .section.active {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+  .section { display: none; }
+  .section.active { display: flex; flex-direction: column; gap: 20px; }
 
   /* ===== CHECKOUT ===== */
   .checkout-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 20px;
+    align-items: start;
   }
 
   .products-panel {
@@ -151,30 +122,17 @@
     padding: 12px;
     cursor: pointer;
     text-align: center;
-    transition: all .2s;
+    transition: border-color .2s, box-shadow .2s;
   }
 
   .product-btn:hover {
     border-color: var(--blue);
-    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(10,132,255,.1);
   }
 
-  .product-emoji {
-    font-size: 28px;
-    margin-bottom: 6px;
-  }
-
-  .product-name {
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .product-price {
-    font-size: 13px;
-    color: var(--blue);
-    font-weight: 700;
-  }
+  .product-emoji { font-size: 28px; margin-bottom: 6px; }
+  .product-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .product-price { font-size: 13px; color: var(--blue); font-weight: 700; }
 
   .cart-panel {
     background: #fff;
@@ -183,61 +141,91 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 100%;
-    max-width: 300px;
+    position: sticky;
+    top: 0;
   }
 
-  .cart-title {
-    font-weight: 700;
-    font-size: 16px;
-  }
+  .cart-title { font-weight: 700; font-size: 16px; }
 
   .cart-items {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 8px;
     border-bottom: 1px solid var(--border);
     padding-bottom: 12px;
-    max-height: 400px;
+    min-height: 40px;
+    max-height: 320px;
     overflow-y: auto;
   }
 
   .cart-item {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
     font-size: 13px;
-    color: #333;
   }
 
-  .cart-totals {
+  .cart-item-name { flex: 1; color: #333; }
+
+  .cart-item-qty {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-size: 13px;
-    margin-bottom: 12px;
+    align-items: center;
+    gap: 4px;
   }
 
-  .totals-row {
+  .qty-btn {
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
     display: flex;
-    justify-content: space-between;
-    color: var(--gray);
+    align-items: center;
+    justify-content: center;
+    color: var(--blue);
+    font-weight: 700;
   }
 
+  .qty-btn:hover { background: var(--bg-light); }
+  .qty-count { min-width: 20px; text-align: center; font-weight: 600; }
+  .cart-item-price { font-weight: 600; min-width: 48px; text-align: right; }
+
+  .cart-totals { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .totals-row { display: flex; justify-content: space-between; color: var(--gray); }
   .totals-row.total {
     color: #000;
     font-weight: 700;
     font-size: 16px;
     border-top: 1px solid var(--border);
     padding-top: 8px;
+    margin-top: 2px;
   }
 
-  .payment-buttons {
+  .payment-buttons { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ===== TRANSACTIONS ===== */
+  .tx-item {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .tx-item-row {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    justify-content: space-between;
+    font-weight: 600;
+    margin-bottom: 4px;
   }
 
+  .tx-status-approved { color: var(--green); }
+  .tx-status-other { color: var(--orange); }
+  .tx-meta { font-size: 12px; color: var(--gray); }
+
+  /* ===== BUTTONS ===== */
   .btn-primary {
     background: var(--blue);
     color: #fff;
@@ -247,17 +235,12 @@
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
-    transition: all .2s;
+    transition: background .2s;
+    width: 100%;
   }
 
-  .btn-primary:hover:not(:disabled) {
-    background: #0066CC;
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  .btn-primary:hover:not(:disabled) { background: #0066CC; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
 
   .btn-secondary {
     background: #fff;
@@ -266,27 +249,32 @@
     padding: 10px;
     border-radius: 10px;
     font-weight: 500;
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
+    width: 100%;
+    transition: background .2s;
   }
+
+  .btn-secondary:hover { background: var(--bg-light); }
 
   /* ===== FORMS ===== */
   .form-card {
     background: #fff;
     border-radius: 12px;
     padding: 20px;
-    max-width: 600px;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .form-group {
-    margin-bottom: 16px;
-  }
+  .form-card h3 { font-size: 16px; font-weight: 700; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
 
   .form-group label {
-    display: block;
     font-weight: 600;
     font-size: 13px;
-    margin-bottom: 6px;
     color: #000;
   }
 
@@ -298,19 +286,22 @@
     border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
+    transition: border-color .2s, box-shadow .2s;
   }
 
   .form-group input:focus,
   .form-group select:focus {
     outline: none;
     border-color: var(--blue);
-    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(10,132,255,.12);
   }
 
-  .form-hint {
-    font-size: 12px;
-    color: var(--gray);
-    margin-top: 4px;
+  .form-hint { font-size: 12px; color: var(--gray); }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   /* ===== MODAL ===== */
@@ -318,24 +309,22 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0,0,0,.5);
     z-index: 1000;
     align-items: center;
     justify-content: center;
   }
 
-  .modal.show {
-    display: flex;
-  }
+  .modal.show { display: flex; }
 
   .modal-content {
     background: #fff;
-    border-radius: 12px;
+    border-radius: 14px;
     width: 90%;
-    max-width: 500px;
+    max-width: 440px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
   }
 
   .modal-header {
@@ -346,10 +335,7 @@
     align-items: center;
   }
 
-  .modal-header h2 {
-    font-size: 18px;
-    font-weight: 700;
-  }
+  .modal-header h2 { font-size: 18px; font-weight: 700; }
 
   .modal-close {
     background: none;
@@ -357,52 +343,29 @@
     font-size: 24px;
     color: var(--gray);
     cursor: pointer;
+    line-height: 1;
+    padding: 4px;
   }
 
-  .modal-body {
-    padding: 20px;
-  }
+  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 
   /* ===== ALERTS ===== */
   .alert {
     padding: 12px 16px;
     border-radius: 8px;
     font-size: 13px;
-    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  .alert.success {
-    background: rgba(52, 199, 89, 0.15);
-    color: var(--green);
-    border: 1px solid rgba(52, 199, 89, 0.3);
-  }
-
-  .alert.error {
-    background: rgba(255, 59, 48, 0.15);
-    color: var(--red);
-    border: 1px solid rgba(255, 59, 48, 0.3);
-  }
-
-  .alert.info {
-    background: rgba(10, 132, 255, 0.15);
-    color: var(--blue);
-    border: 1px solid rgba(10, 132, 255, 0.3);
-  }
+  .alert.success { background: rgba(52,199,89,.12); color: var(--green); border: 1px solid rgba(52,199,89,.3); }
+  .alert.error   { background: rgba(255,59,48,.12);  color: var(--red);   border: 1px solid rgba(255,59,48,.3); }
+  .alert.info    { background: rgba(10,132,255,.12); color: var(--blue);  border: 1px solid rgba(10,132,255,.3); }
 
   /* ===== TOGGLE ===== */
-  .toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 28px;
-  }
-
-  .toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
+  .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
   .toggle-slider {
     position: absolute;
     inset: 0;
@@ -411,8 +374,7 @@
     transition: .3s;
     cursor: pointer;
   }
-
-  .toggle-slider:before {
+  .toggle-slider::before {
     content: '';
     position: absolute;
     height: 24px;
@@ -422,73 +384,81 @@
     background: #fff;
     border-radius: 50%;
     transition: .3s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
   }
-
-  input:checked + .toggle-slider {
-    background: var(--green);
-  }
-
-  input:checked + .toggle-slider:before {
-    transform: translateX(22px);
-  }
+  input:checked + .toggle-slider { background: var(--green); }
+  input:checked + .toggle-slider::before { transform: translateX(22px); }
 
   /* ===== SPINNER ===== */
   .spinner {
     display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(0, 0, 0, 0.2);
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(10,132,255,.25);
     border-top-color: var(--blue);
     border-radius: 50%;
-    animation: spin .8s linear infinite;
+    animation: spin .7s linear infinite;
+    flex-shrink: 0;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== TOAST ===== */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1C1C1E;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 2000;
+    transition: transform .3s ease;
+    pointer-events: none;
+    white-space: nowrap;
   }
 
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== RESPONSIVE ===== */
   @media (max-width: 768px) {
-    .sidebar {
-      width: 60px;
-      padding: 10px;
-    }
+    :root { --sidebar-w: 56px; }
 
-    .checkout-grid {
-      grid-template-columns: 1fr;
-    }
+    .sidebar { padding: 12px 8px; }
+    .sidebar-logo { font-size: 14px; letter-spacing: 0; }
+    .sidebar-btn { padding: 10px; font-size: 18px; }
+    .sidebar-btn span { display: none; }
 
-    .products-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .cart-panel {
-      max-width: none;
-    }
+    .checkout-grid { grid-template-columns: 1fr; }
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+    .cart-panel { position: static; }
+    .form-card { max-width: none; }
   }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-logo">DUOPAY</div>
-    <button class="sidebar-btn active" onclick="switchSection('checkout')">🛒 Checkout</button>
-    <button class="sidebar-btn" onclick="switchSection('transactions')">📋 Transactions</button>
-    <button class="sidebar-btn" onclick="switchSection('settings')">⚙️ Settings</button>
+    <button class="sidebar-btn active" onclick="switchSection('checkout', this)"><span>🛒 Checkout</span></button>
+    <button class="sidebar-btn" onclick="switchSection('transactions', this)"><span>📋 Transactions</span></button>
+    <button class="sidebar-btn" onclick="switchSection('settings', this)"><span>⚙️ Settings</span></button>
     <div class="sidebar-spacer"></div>
-    <button class="sidebar-btn" onclick="logout()">🚪 Logout</button>
+    <button class="sidebar-btn" onclick="logout()"><span>🚪 Logout</span></button>
   </div>
 
-  <!-- MAIN -->
   <div class="main">
     <div class="header">
       <h1 id="headerTitle">Checkout</h1>
     </div>
 
     <div class="content">
-      <!-- CHECKOUT SECTION -->
+
+      <!-- CHECKOUT -->
       <div id="checkout" class="section active">
         <div class="checkout-grid">
           <div class="products-panel">
@@ -497,100 +467,100 @@
           </div>
           <div class="cart-panel">
             <div class="cart-title">Cart</div>
-            <div class="cart-items" id="cartItems"></div>
+            <div class="cart-items" id="cartItems">
+              <div style="color: var(--gray); font-size: 13px; padding: 8px 0;">Cart is empty</div>
+            </div>
             <div class="cart-totals">
-              <div class="totals-row">
-                <span>Subtotal</span>
-                <span id="subtotal">$0.00</span>
-              </div>
-              <div class="totals-row">
-                <span>Tax</span>
-                <span id="tax">$0.00</span>
-              </div>
-              <div class="totals-row total">
-                <span>Total</span>
-                <span id="total">$0.00</span>
-              </div>
+              <div class="totals-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+              <div class="totals-row"><span>Tax</span><span id="tax">$0.00</span></div>
+              <div class="totals-row total"><span>Total</span><span id="total">$0.00</span></div>
             </div>
             <div class="payment-buttons">
-              <button class="btn-primary" id="chargeBtn" onclick="showPaymentModal()">Charge</button>
-              <button class="btn-secondary" onclick="clearCart()">Clear</button>
+              <button class="btn-primary" id="chargeBtn" onclick="showPaymentModal()" disabled>Charge</button>
+              <button class="btn-secondary" onclick="clearCart()">Clear Cart</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- TRANSACTIONS SECTION -->
+      <!-- TRANSACTIONS -->
       <div id="transactions" class="section">
-        <div class="form-card">
-          <h3>Transactions</h3>
-          <div id="transactionsList" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;"></div>
+        <div class="form-card" style="max-width:none;">
+          <h3>Recent Transactions</h3>
+          <div id="transactionsList" style="display:flex;flex-direction:column;gap:10px;">
+            <div class="alert info"><span class="spinner"></span> Loading…</div>
+          </div>
         </div>
       </div>
 
-      <!-- SETTINGS SECTION -->
+      <!-- SETTINGS -->
       <div id="settings" class="section">
-        <!-- General settings -->
         <div class="form-card">
           <h3>General</h3>
           <div class="form-group">
-            <label>Tax Rate (%)</label>
-            <input type="number" id="taxRate" placeholder="5" value="5" step="0.1" onchange="updateTaxRate()">
+            <label for="taxRate">Tax Rate (%)</label>
+            <input type="number" id="taxRate" min="0" max="100" step="0.1" placeholder="5">
           </div>
           <div class="form-group">
-            <label>Terminal Name</label>
-            <input type="text" id="terminalName" placeholder="DUOPAY-001" onchange="updateTerminalName()">
+            <label for="terminalName">Terminal Name</label>
+            <input type="text" id="terminalName" placeholder="DUOPAY-001">
           </div>
+          <button class="btn-primary" onclick="saveGeneralSettings()">Save General</button>
         </div>
 
-        <!-- SPIn settings -->
         <div class="form-card">
           <h3>📡 SPIn Configuration</h3>
-          <div class="form-group">
-            <label>Enable SPIn</label>
+          <div class="toggle-row">
+            <label for="spinEnabled" style="font-weight:600;font-size:13px;">Enable SPIn</label>
             <label class="toggle-switch">
-              <input type="checkbox" id="spinEnabled" onchange="updateSpinConfig()">
+              <input type="checkbox" id="spinEnabled">
               <span class="toggle-slider"></span>
             </label>
           </div>
           <div class="form-group">
-            <label>Connector URL</label>
-            <input type="text" id="spinUrl" placeholder="https://connector.example.com" onchange="updateSpinConfig()">
+            <label for="spinUrl">Connector URL</label>
+            <input type="url" id="spinUrl" placeholder="https://connector.example.com">
           </div>
           <div class="form-group">
-            <label>Register ID</label>
-            <input type="text" id="spinRegister" placeholder="DEMO-REG-01" onchange="updateSpinConfig()">
+            <label for="spinRegister">Register ID</label>
+            <input type="text" id="spinRegister" placeholder="DEMO-REG-01">
           </div>
           <div class="form-group">
-            <label>API Key</label>
-            <input type="password" id="spinApiKey" placeholder="••••••••" onchange="updateSpinConfig()">
+            <label for="spinApiKey">API Key</label>
+            <input type="password" id="spinApiKey" placeholder="••••••••">
           </div>
-          <button class="btn-primary" onclick="testSpinConnection()">Test Connection</button>
-          <div id="spinTestResult" style="margin-top: 12px;"></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-primary" style="flex:1" onclick="saveSpinConfig()">Save SPIn</button>
+            <button class="btn-secondary" style="flex:1" onclick="testSpinConnection()">Test</button>
+          </div>
+          <div id="spinTestResult"></div>
         </div>
 
-        <!-- PAX settings -->
         <div class="form-card">
           <h3>🌐 PAX Configuration</h3>
-          <div class="form-group">
-            <label>Enable PAX</label>
+          <div class="toggle-row">
+            <label for="paxEnabled" style="font-weight:600;font-size:13px;">Enable PAX</label>
             <label class="toggle-switch">
-              <input type="checkbox" id="paxEnabled" onchange="updatePaxConfig()">
+              <input type="checkbox" id="paxEnabled">
               <span class="toggle-slider"></span>
             </label>
           </div>
           <div class="form-group">
-            <label>Terminal IP</label>
-            <input type="text" id="paxIp" placeholder="192.168.1.100" onchange="updatePaxConfig()">
+            <label for="paxIp">Terminal IP</label>
+            <input type="text" id="paxIp" placeholder="192.168.1.100">
           </div>
           <div class="form-group">
-            <label>Port</label>
-            <input type="number" id="paxPort" placeholder="10001" value="10001" onchange="updatePaxConfig()">
+            <label for="paxPort">Port</label>
+            <input type="number" id="paxPort" placeholder="10001">
           </div>
-          <button class="btn-primary" onclick="testPaxConnection()">Test Connection</button>
-          <div id="paxTestResult" style="margin-top: 12px;"></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-primary" style="flex:1" onclick="savePaxConfig()">Save PAX</button>
+            <button class="btn-secondary" style="flex:1" onclick="testPaxConnection()">Test</button>
+          </div>
+          <div id="paxTestResult"></div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
@@ -608,27 +578,29 @@
         <input type="text" id="paymentAmount" readonly>
       </div>
       <div class="form-group">
-        <label>Tip</label>
-        <input type="number" id="tipAmount" placeholder="0.00" value="0">
+        <label for="tipAmount">Tip ($)</label>
+        <input type="number" id="tipAmount" placeholder="0.00" min="0" step="0.01">
       </div>
       <div class="form-group">
-        <label>Payment Method</label>
+        <label for="paymentMethod">Payment Method</label>
         <select id="paymentMethod">
-          <option value="spin">SPIn</option>
-          <option value="pax">PAX</option>
+          <option value="spin">SPIn (Card)</option>
+          <option value="pax">PAX (Card)</option>
           <option value="cash">Cash</option>
         </select>
       </div>
       <div id="paymentStatus"></div>
-      <button class="btn-primary" id="processPaymentBtn" onclick="processPayment()">Process</button>
+      <button class="btn-primary" id="processPaymentBtn" onclick="processPayment()">Process Payment</button>
     </div>
   </div>
 </div>
 
-<script>
-  const API_BASE = '/api';
+<div id="toast"></div>
 
-  // State
+<script>
+  const API = '/api';
+
+  // ===== State =====
   const state = {
     cart: [],
     taxRate: parseFloat(localStorage.getItem('taxRate') || '5'),
@@ -642,30 +614,30 @@
     pax: {
       enabled: localStorage.getItem('pax_enabled') === 'true',
       ip: localStorage.getItem('pax_ip') || '',
-      port: parseInt(localStorage.getItem('pax_port') || '10001'),
+      port: localStorage.getItem('pax_port') || '10001',
     }
   };
 
-  // Products
+  // ===== Products =====
   const products = [
-    { id: 1, name: 'Espresso', emoji: '☕', price: 3.25 },
-    { id: 2, name: 'Latte', emoji: '🥛', price: 4.75 },
-    { id: 3, name: 'Mocha', emoji: '🍫', price: 5.00 },
+    { id: 1, name: 'Espresso',  emoji: '☕', price: 3.25 },
+    { id: 2, name: 'Latte',     emoji: '🥛', price: 4.75 },
+    { id: 3, name: 'Mocha',     emoji: '🍫', price: 5.00 },
     { id: 4, name: 'Croissant', emoji: '🥐', price: 3.00 },
-    { id: 5, name: 'Muffin', emoji: '🧁', price: 2.75 },
-    { id: 6, name: 'Bagel', emoji: '🥯', price: 3.50 },
+    { id: 5, name: 'Muffin',    emoji: '🧁', price: 2.75 },
+    { id: 6, name: 'Bagel',     emoji: '🥯', price: 3.50 },
   ];
 
-  // Init
+  // ===== Init =====
   function init() {
     renderProducts();
-    loadConfig();
-    loadTransactions();
+    loadSettingsUI();
+    updateCart();
   }
 
+  // ===== Products =====
   function renderProducts() {
-    const grid = document.getElementById('productsGrid');
-    grid.innerHTML = products.map(p => `
+    document.getElementById('productsGrid').innerHTML = products.map(p => `
       <button class="product-btn" onclick="addToCart(${p.id})">
         <div class="product-emoji">${p.emoji}</div>
         <div class="product-name">${p.name}</div>
@@ -674,19 +646,20 @@
     `).join('');
   }
 
+  // ===== Cart =====
   function addToCart(productId) {
     const product = products.find(p => p.id === productId);
     const existing = state.cart.find(c => c.id === productId);
-    if (existing) {
-      existing.qty++;
-    } else {
-      state.cart.push({ ...product, qty: 1 });
-    }
+    if (existing) existing.qty++;
+    else state.cart.push({ ...product, qty: 1 });
     updateCart();
   }
 
-  function removeFromCart(productId) {
-    state.cart = state.cart.filter(c => c.id !== productId);
+  function changeQty(productId, delta) {
+    const item = state.cart.find(c => c.id === productId);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) state.cart = state.cart.filter(c => c.id !== productId);
     updateCart();
   }
 
@@ -696,41 +669,46 @@
   }
 
   function updateCart() {
-    const items = document.getElementById('cartItems');
-    const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const subtotal = state.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
     const tax = subtotal * (state.taxRate / 100);
     const total = subtotal + tax;
 
-    items.innerHTML = state.cart.map(item => `
-      <div class="cart-item">
-        <span>${item.name} ×${item.qty}</span>
-        <span>$${(item.price * item.qty).toFixed(2)}</span>
-      </div>
-    `).join('');
+    const el = document.getElementById('cartItems');
+    el.innerHTML = state.cart.length === 0
+      ? '<div style="color:var(--gray);font-size:13px;padding:8px 0;">Cart is empty</div>'
+      : state.cart.map(item => `
+          <div class="cart-item">
+            <span class="cart-item-name">${item.name}</span>
+            <div class="cart-item-qty">
+              <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+              <span class="qty-count">${item.qty}</span>
+              <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+            </div>
+            <span class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</span>
+          </div>`).join('');
 
     document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
     document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
     document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('chargeBtn').disabled = state.cart.length === 0;
   }
 
+  function calculateTotal() {
+    const subtotal = state.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+    return subtotal * (1 + state.taxRate / 100);
+  }
+
+  // ===== Payment Modal =====
   function showPaymentModal() {
-    if (state.cart.length === 0) {
-      alert('Cart is empty');
-      return;
-    }
-    const total = calculateTotal();
-    document.getElementById('paymentAmount').value = total.toFixed(2);
+    document.getElementById('paymentAmount').value = calculateTotal().toFixed(2);
+    document.getElementById('tipAmount').value = '';
     document.getElementById('paymentStatus').innerHTML = '';
+    document.getElementById('processPaymentBtn').disabled = false;
     document.getElementById('paymentModal').classList.add('show');
   }
 
   function closePaymentModal() {
     document.getElementById('paymentModal').classList.remove('show');
-  }
-
-  function calculateTotal() {
-    const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    return subtotal * (1 + state.taxRate / 100);
   }
 
   async function processPayment() {
@@ -741,165 +719,180 @@
     const btn = document.getElementById('processPaymentBtn');
 
     btn.disabled = true;
-    statusDiv.innerHTML = '<div class="alert info"><span class="spinner"></span> Processing...</div>';
+    statusDiv.innerHTML = '<div class="alert info"><span class="spinner"></span> Processing…</div>';
 
     try {
-      let result;
+      let approved = false;
+
       if (method === 'spin') {
-        result = await processSpin(amount, tip);
-      } else if (method === 'pax') {
-        result = { approved: true, method: 'PAX' };
+        if (!state.spin.enabled || !state.spin.url) throw new Error('SPIn is not configured — enable it in Settings first');
+        const orderId = `web-${Date.now()}`;
+        const spinTerminal = await getOrCreateSpinTerminal();
+        const resp = await fetch(`${API}/payments/spin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ terminal_id: spinTerminal.id, order_id: orderId, amount, tip })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'SPIn payment failed');
+        approved = data.approved;
       } else {
-        result = { approved: true, method: 'Cash' };
+        approved = true;
       }
 
-      if (result.approved) {
+      if (approved) {
         statusDiv.innerHTML = '<div class="alert success">✓ Payment approved</div>';
         clearCart();
-        setTimeout(() => closePaymentModal(), 1500);
+        setTimeout(closePaymentModal, 1500);
       } else {
         statusDiv.innerHTML = '<div class="alert error">✗ Payment declined</div>';
+        btn.disabled = false;
       }
     } catch (err) {
-      statusDiv.innerHTML = `<div class="alert error">Error: ${err.message}</div>`;
-    } finally {
+      statusDiv.innerHTML = `<div class="alert error">✗ ${err.message}</div>`;
       btn.disabled = false;
     }
   }
 
-  async function processSpin(amount, tip) {
-    if (!state.spin.enabled || !state.spin.url) throw new Error('SPIn not configured');
+  async function getOrCreateSpinTerminal() {
+    const resp = await fetch(`${API}/terminals`);
+    const terminals = await resp.json();
+    const existing = terminals.find(t => t.type === 'spin');
+    if (existing) return existing;
 
-    const response = await fetch(`${state.spin.url}/v1/payments/sale`, {
+    const create = await fetch(`${API}/terminals`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(state.spin.apiKey && { 'x-api-key': state.spin.apiKey })
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        registerId: state.spin.register,
-        foodteriaOrderId: `web-${Date.now()}`,
-        amount: amount.toFixed(2),
-        tip: tip > 0 ? tip.toFixed(2) : undefined,
-        paymentType: 'Credit'
+        name: 'SPIn-Default',
+        type: 'spin',
+        enabled: true,
+        config: { url: state.spin.url, register: state.spin.register, apiKey: state.spin.apiKey }
       })
     });
-
-    const data = await response.json();
-    return { approved: data.status === 'APPROVED', method: 'Card (SPIn)' };
+    return create.json();
   }
 
-  function loadConfig() {
+  // ===== Settings UI =====
+  function loadSettingsUI() {
+    document.getElementById('taxRate').value = state.taxRate;
+    document.getElementById('terminalName').value = state.terminalName;
     document.getElementById('spinEnabled').checked = state.spin.enabled;
     document.getElementById('spinUrl').value = state.spin.url;
     document.getElementById('spinRegister').value = state.spin.register;
     document.getElementById('spinApiKey').value = state.spin.apiKey;
-
     document.getElementById('paxEnabled').checked = state.pax.enabled;
     document.getElementById('paxIp').value = state.pax.ip;
     document.getElementById('paxPort').value = state.pax.port;
-
-    document.getElementById('taxRate').value = state.taxRate;
-    document.getElementById('terminalName').value = state.terminalName;
-
-    updateCart();
   }
 
-  function updateSpinConfig() {
-    state.spin.enabled = document.getElementById('spinEnabled').checked;
-    state.spin.url = document.getElementById('spinUrl').value;
-    state.spin.register = document.getElementById('spinRegister').value;
-    state.spin.apiKey = document.getElementById('spinApiKey').value;
+  function saveGeneralSettings() {
+    state.taxRate = parseFloat(document.getElementById('taxRate').value) || 5;
+    state.terminalName = document.getElementById('terminalName').value.trim() || 'DUOPAY-001';
+    localStorage.setItem('taxRate', state.taxRate);
+    localStorage.setItem('terminalName', state.terminalName);
+    updateCart();
+    showToast('General settings saved');
+  }
 
+  function saveSpinConfig() {
+    state.spin.enabled = document.getElementById('spinEnabled').checked;
+    state.spin.url = document.getElementById('spinUrl').value.trim();
+    state.spin.register = document.getElementById('spinRegister').value.trim();
+    state.spin.apiKey = document.getElementById('spinApiKey').value;
     localStorage.setItem('spin_enabled', state.spin.enabled);
     localStorage.setItem('spin_url', state.spin.url);
     localStorage.setItem('spin_register', state.spin.register);
     localStorage.setItem('spin_api_key', state.spin.apiKey);
+    showToast('SPIn settings saved');
   }
 
-  function updatePaxConfig() {
+  function savePaxConfig() {
     state.pax.enabled = document.getElementById('paxEnabled').checked;
-    state.pax.ip = document.getElementById('paxIp').value;
-    state.pax.port = parseInt(document.getElementById('paxPort').value);
-
+    state.pax.ip = document.getElementById('paxIp').value.trim();
+    state.pax.port = document.getElementById('paxPort').value;
     localStorage.setItem('pax_enabled', state.pax.enabled);
     localStorage.setItem('pax_ip', state.pax.ip);
     localStorage.setItem('pax_port', state.pax.port);
-  }
-
-  function updateTaxRate() {
-    state.taxRate = parseFloat(document.getElementById('taxRate').value);
-    localStorage.setItem('taxRate', state.taxRate);
-    updateCart();
-  }
-
-  function updateTerminalName() {
-    state.terminalName = document.getElementById('terminalName').value;
-    localStorage.setItem('terminalName', state.terminalName);
+    showToast('PAX settings saved');
   }
 
   async function testSpinConnection() {
+    const resultEl = document.getElementById('spinTestResult');
     if (!state.spin.url || !state.spin.register) {
-      document.getElementById('spinTestResult').innerHTML = '<div class="alert error">Please fill in URL and Register ID</div>';
+      resultEl.innerHTML = '<div class="alert error">Save SPIn settings first</div>';
       return;
     }
-
+    resultEl.innerHTML = '<div class="alert info"><span class="spinner"></span> Testing…</div>';
     try {
-      const response = await fetch(`${state.spin.url}/v1/registers/${state.spin.register}/test-connection`, {
+      const resp = await fetch(`${API}/terminals`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(state.spin.apiKey && { 'x-api-key': state.spin.apiKey }) }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'SPIn-Test', type: 'spin', enabled: true,
+          config: { url: state.spin.url, register: state.spin.register, apiKey: state.spin.apiKey } })
       });
-
-      if (response.ok) {
-        document.getElementById('spinTestResult').innerHTML = '<div class="alert success">✓ Connected</div>';
-      } else {
-        document.getElementById('spinTestResult').innerHTML = '<div class="alert error">✗ Connection failed</div>';
-      }
+      const t = await resp.json();
+      const testResp = await fetch(`${API}/terminals/${t.id}/test`, { method: 'POST' });
+      const data = await testResp.json();
+      resultEl.innerHTML = data.connected
+        ? `<div class="alert success">✓ Connected${data.tpn ? ` — TPN: ${data.tpn}` : ''}</div>`
+        : `<div class="alert error">✗ ${data.error || 'Connection failed'}</div>`;
     } catch (err) {
-      document.getElementById('spinTestResult').innerHTML = `<div class="alert error">✗ ${err.message}</div>`;
+      resultEl.innerHTML = `<div class="alert error">✗ ${err.message}</div>`;
     }
   }
 
   function testPaxConnection() {
-    document.getElementById('paxTestResult').innerHTML = '<div class="alert info">PAX test connection requires backend proxy</div>';
+    document.getElementById('paxTestResult').innerHTML =
+      '<div class="alert info">PAX requires the desktop connector app for full connectivity</div>';
   }
 
+  // ===== Transactions =====
   async function loadTransactions() {
+    const list = document.getElementById('transactionsList');
+    list.innerHTML = '<div class="alert info"><span class="spinner"></span> Loading…</div>';
     try {
-      const response = await fetch(`${API_BASE}/transactions?limit=10`);
-      const transactions = await response.json();
-      const list = document.getElementById('transactionsList');
-      list.innerHTML = transactions.map(t => `
-        <div style="padding: 12px; border: 1px solid var(--border); border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; font-weight: 600;">
-            <span>$${t.total}</span>
-            <span class="badge" style="color: ${t.status === 'APPROVED' ? 'var(--green)' : 'var(--orange)'}">${t.status}</span>
+      const resp = await fetch(`${API}/transactions?limit=20`);
+      const txs = await resp.json();
+      if (txs.length === 0) {
+        list.innerHTML = '<div style="color:var(--gray);font-size:13px;">No transactions yet</div>';
+        return;
+      }
+      list.innerHTML = txs.map(t => `
+        <div class="tx-item">
+          <div class="tx-item-row">
+            <span>$${parseFloat(t.total).toFixed(2)}</span>
+            <span class="${t.status === 'APPROVED' ? 'tx-status-approved' : 'tx-status-other'}">${t.status}</span>
           </div>
-          <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">
-            ${new Date(t.created_at).toLocaleString()} • ${t.method}
-          </div>
-        </div>
-      `).join('');
+          <div class="tx-meta">${new Date(t.created_at).toLocaleString()} · ${t.method}${t.terminal_name ? ' · ' + t.terminal_name : ''}</div>
+        </div>`).join('');
     } catch (err) {
-      console.error('Failed to load transactions:', err);
+      list.innerHTML = `<div class="alert error">Failed to load transactions</div>`;
     }
   }
 
-  function switchSection(sectionId) {
+  // ===== Navigation =====
+  function switchSection(sectionId, btn) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
-
     document.getElementById(sectionId).classList.add('active');
-    event.target.classList.add('active');
-
+    btn.classList.add('active');
     const titles = { checkout: 'Checkout', transactions: 'Transactions', settings: 'Settings' };
     document.getElementById('headerTitle').textContent = titles[sectionId] || sectionId;
-
     if (sectionId === 'transactions') loadTransactions();
   }
 
+  // ===== Toast =====
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ===== Logout =====
   function logout() {
-    if (confirm('Logout?')) {
+    if (confirm('Clear all local config and reload?')) {
       localStorage.clear();
       location.reload();
     }
