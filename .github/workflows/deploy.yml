@@ -1,0 +1,57 @@
+name: Deploy DUOPAY to VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: 22
+          script: |
+            set -e
+            echo "=== Starting DUOPAY deployment ==="
+            
+            # Stop service during update
+            systemctl stop duopay 2>/dev/null || true
+            
+            # Pull latest code
+            cd /opt/duopay
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # Install/update dependencies
+            npm install --production
+            
+            # Ensure data directory exists
+            mkdir -p data
+            chown www-data:www-data data
+            
+            # Fix permissions
+            chown -R www-data:www-data /opt/duopay
+            
+            # Start service
+            systemctl start duopay
+            sleep 3
+            
+            # Verify
+            if systemctl is-active --quiet duopay; then
+              echo "✓ DUOPAY deployed and running"
+              curl -s http://localhost:3000/api/health
+            else
+              echo "✗ Deployment failed"
+              journalctl -u duopay -n 20
+              exit 1
+            fi
