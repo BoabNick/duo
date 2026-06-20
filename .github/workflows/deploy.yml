@@ -11,6 +11,8 @@ jobs:
 
     steps:
       - name: Trigger Coolify deploy
+        if: always()
+        continue-on-error: true
         run: |
           echo "Triggering Coolify deployment..."
           HTTP_STATUS=$(curl -s -o /tmp/coolify_response.json -w "%{http_code}" \
@@ -23,6 +25,38 @@ jobs:
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
             echo "✓ Coolify deployment triggered successfully (HTTP $HTTP_STATUS)"
           else
-            echo "✗ Coolify returned HTTP $HTTP_STATUS"
-            exit 1
+            echo "⚠ Coolify returned HTTP $HTTP_STATUS - continuing to webhook deployment"
+          fi
+
+      - name: Trigger webhook deployment
+        if: always()
+        continue-on-error: true
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
+            echo "⚠ Webhook secrets not configured - skipping webhook deployment"
+            exit 0
+          fi
+
+          echo "Triggering webhook deployment to VPS..."
+          PAYLOAD='{"action":"deploy"}'
+          SIGNATURE="sha256=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -hex | cut -d' ' -f2)"
+
+          HTTP_STATUS=$(curl -s -o /tmp/webhook_response.txt -w "%{http_code}" \
+            -X POST "$WEBHOOK_URL/deploy/duo" \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: $SIGNATURE" \
+            -d "$PAYLOAD" \
+            --max-time 10 \
+            --connect-timeout 5)
+
+          echo "Response:"
+          cat /tmp/webhook_response.txt
+          echo ""
+          if [ "$HTTP_STATUS" -eq 202 ] || [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "✓ Webhook deployment triggered successfully (HTTP $HTTP_STATUS)"
+          else
+            echo "⚠ Webhook returned HTTP $HTTP_STATUS - check VPS availability"
           fi

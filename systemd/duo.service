@@ -1,0 +1,21 @@
+[Unit]
+Description=DUOPAY POS Application
+After=network.target
+Wants=webhook-server.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/duopay
+ExecStart=/usr/bin/node /opt/duopay/server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+Environment="DB_PATH=/opt/duopay/data/duopay.db"
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,23 @@
+[Unit]
+Description=GitHub Webhook Deployment Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt
+ExecStart=/usr/bin/node /opt/webhook-server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+Environment="GITHUB_WEBHOOK_SECRET=YOUR_WEBHOOK_SECRET_HERE"
+Environment="NODE_ENV=production"
+
+# Security
+PrivateTmp=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target
