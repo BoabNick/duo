@@ -10,35 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Trigger Coolify deploy
         run: |
           echo "Triggering Coolify deployment..."
           HTTP_STATUS=$(curl -s -o /tmp/coolify_response.json -w "%{http_code}" \
-            -X GET "http://2.25.161.32:8000/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}&token=${{ secrets.COOLIFY_WEBHOOK_TOKEN }}&force=false" \
-            --max-time 30)
+            -X GET "http://2.25.161.32:8000/api/v1/deploy?uuid=hwjszxf1a4v98r7crvero9os&force=false" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+            --max-time 60)
+          echo "Response:"
           cat /tmp/coolify_response.json
           echo ""
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "Coolify deployment triggered successfully (HTTP $HTTP_STATUS)"
+            echo "✓ Coolify deployment triggered successfully (HTTP $HTTP_STATUS)"
           else
-            echo "Warning: Coolify returned HTTP $HTTP_STATUS"
+            echo "✗ Coolify returned HTTP $HTTP_STATUS"
+            exit 1
           fi
-
-      - name: Notify app deploy webhook (fallback)
-        if: always()
-        run: |
-          echo "Triggering app deploy webhook..."
-          PAYLOAD='{"ref":"refs/heads/main","repository":{"name":"duo"},"pusher":{"name":"github-actions"}}'
-          SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "${{ secrets.DEPLOY_SECRET }}" | awk '{print "sha256="$2}')
-          curl -s -X POST "https://moukas.tech/api/deploy" \
-            -H "Content-Type: application/json" \
-            -H "X-Hub-Signature-256: $SIGNATURE" \
-            -d "$PAYLOAD" \
-            --max-time 30 \
-            -o /tmp/deploy_response.json 2>/dev/null || true
-          cat /tmp/deploy_response.json || true
-          echo ""
-          echo "Done."
