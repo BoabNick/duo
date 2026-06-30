@@ -30,8 +30,7 @@ duo/
 │       └── app.js            #   application logic
 ├── android/                  # Generated native Android project (Gradle)
 ├── .github/workflows/
-│   ├── android.yml           # CI: builds the debug APK on push
-│   └── deploy.yml            # CI: triggers Coolify/VPS deploy of the web app
+│   └── android.yml           # CI: builds the debug APK on push
 └── DEPLOYMENT.md             # VPS deployment guide
 ```
 
@@ -168,9 +167,14 @@ compiled-in default lives in `public/js/config.js` (`DEFAULT_SERVER_URL`).
 
 ## 🌍 Deployment
 
-The web app deploys as a normal Node service or container. `deploy.yml` triggers a Coolify
-webhook on push to `main`; see [DEPLOYMENT.md](./DEPLOYMENT.md) for a full VPS + Nginx +
-Let's Encrypt walkthrough. Always serve over HTTPS in production.
+The web app runs as a Docker container on a [Coolify](https://coolify.io/) VPS, served at
+`moukas.tech`. Deployment is handled by **Coolify's own GitHub integration**: connect this
+repo as the application source and enable **auto-deploy on push** (or add Coolify's deploy
+webhook to the repo). Coolify then builds from the committed `Dockerfile` on every push to
+`main` — no GitHub Actions deploy step is required.
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for a full VPS + Nginx + Let's Encrypt walkthrough.
+Always serve over HTTPS in production.
 
 ---
 
