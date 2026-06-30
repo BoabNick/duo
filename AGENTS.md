@@ -1,33 +1,54 @@
 # AGENTS.md
 
-## Cursor Cloud specific instructions
+## Project overview
 
-DUOPAY is a single runnable service: a Node.js/Express server (`server.js`) that
-serves the static frontend in `public/` and a REST API on the same port, backed by
-an embedded SQLite database (auto-created on first run). The repo also contains
-loose Swift/SwiftUI source files (`*.swift`) for an iOS app, but there is **no
-`Package.swift`/Xcode project**, so the iOS code is not buildable in this repo.
+DUOPAY is a POS app shipped two ways from one frontend:
 
-### Run the app (dev)
-- Start: `npm run dev` (nodemon, auto-reload) or `npm start`. Listens on port `3000`
-  (override with `PORT`). See `package.json` scripts.
+- **Web app**: a Node.js/Express server (`server.js`) serves the static frontend in
+  `public/` and a REST API on the same port, backed by an embedded SQLite database
+  (auto-created on first run).
+- **Mobile app**: the same `public/` directory is wrapped by **Capacitor** (`capacitor.config.json`,
+  `webDir: public`) into a native **Android** project (`android/`) that builds an `.apk`. An
+  iOS project can be added on macOS with `npx cap add ios`.
+
+## Run the web app (dev)
+
+- Start: `npm run dev` (nodemon) or `npm start`. Listens on port `3000` (override `PORT`).
 - No `.env` is required — all env vars have defaults. Optionally `cp .env.example .env`.
-- SQLite DB is created automatically at `DB_PATH` (default `./duopay.db`); no separate
-  DB process is needed. The DB file and `node_modules/` are git-ignored.
+- SQLite DB is created automatically at `DB_PATH` (default `./duopay.db`). The DB file and
+  `node_modules/` are git-ignored.
 - Health check: `curl http://localhost:3000/api/health`.
 
-### Build / lint / test
-- **No build step** — the server runs JS directly and the frontend is static HTML.
-- **No linter** is configured.
-- **No tests exist.** `npm test` is a placeholder that intentionally exits 1 — do not
+## Build the Android APK
+
+- Requires JDK 17 + Android SDK (`ANDROID_HOME`). Locally:
+  `npm install && npx cap sync android && npm run android:build`
+  → `android/app/build/outputs/apk/debug/app-debug.apk`.
+- CI builds it without a local SDK: `.github/workflows/android.yml` (push to `main` or run
+  manually) uploads the `duopay-debug-apk` artifact.
+- After editing anything in `public/`, run `npx cap sync` so the native project is updated.
+  Web assets are copied into `android/app/src/main/assets/public` (git-ignored, regenerated
+  by sync) — never edit them there.
+
+## Build / lint / test
+
+- **No build step** for the web app — the server runs JS directly; the frontend is static.
+- **No linter / no tests** are configured. `npm test` is a placeholder that exits 1 — do not
   treat its failure as a regression.
 
-### Non-obvious caveats
-- The SPIn (Dejavoo) and PAX integrations require real external endpoints/hardware.
-  The app is fully exercisable end-to-end without them: use the **Cash** payment
-  method in the checkout UI, or the REST API directly (`/api/terminals`,
-  `/api/transactions`, `/api/settings`).
-- `Dockerfile` runs `npm ci --only=production` and copies a `package-lock.json`, but
-  **no lockfile is committed**, so `docker build` / `docker-compose up` will fail as-is.
-  For local development use Node directly (`npm install` + `npm run dev`), not Docker.
+## Frontend layout
+
+- `public/index.html` — markup only.
+- `public/css/styles.css` — all styles.
+- `public/js/config.js` — resolves the API base at runtime: same-origin `/api` on web,
+  an absolute URL on native/local-bundle (configurable in-app via Settings → Server URL).
+- `public/js/app.js` — application logic. Functions are global (referenced by inline
+  `onclick` handlers in the HTML); keep them on the global scope.
+
+## Non-obvious caveats
+
+- SPIn (Dejavoo) and PAX integrations need real external endpoints/hardware. The app is fully
+  exercisable without them via the **Cash** payment method or the REST API directly.
 - `sqlite3` is a native module; `npm install` compiles/downloads a prebuilt binary.
+- Capacitor tooling lives in `devDependencies`, so the Docker image (`npm ci --omit=dev`)
+  stays lean and the `android/` project is excluded from the image via `.dockerignore`.

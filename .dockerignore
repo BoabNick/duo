@@ -1,0 +1,17 @@
+# The container only runs the Node backend + static frontend.
+node_modules/
+npm-debug.log*
+
+# Native mobile project — not needed in the server image
+android/
+ios/
+capacitor.config.json
+
+# Local data / env / git
+data/
+*.db
+.env
+.git/
+.github/
+*.md
+.dockerignore

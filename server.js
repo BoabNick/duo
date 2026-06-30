@@ -13,9 +13,16 @@ const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
   : ['http://localhost:3000', 'https://moukas.tech', 'https://www.moukas.tech'];
 
+// Origins used by the Capacitor mobile app (Android/iOS WebView) — always allowed so
+// the native app can reach this backend regardless of CORS_ORIGIN configuration.
+const nativeOrigins = ['capacitor://localhost', 'ionic://localhost', 'http://localhost', 'https://localhost'];
+
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    // No Origin header (curl, same-origin, native fetch) or an allow-listed origin.
+    if (!origin || allowedOrigins.includes(origin) || nativeOrigins.includes(origin)) {
+      return cb(null, true);
+    }
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true

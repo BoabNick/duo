@@ -1,5 +1,25 @@
+# Dependencies
 node_modules/
+
+# Database
 *.db
 data/
+
+# Environment
 .env
+*.local
+
+# Logs
 npm-debug.log*
+*.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Capacitor / Android build outputs
+# (android/.gitignore handles the rest of the native project)
+android/app/release/
+*.apk
+*.aab

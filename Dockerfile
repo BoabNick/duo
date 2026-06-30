@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install production dependencies only (Capacitor tooling lives in devDependencies)
+RUN npm ci --omit=dev
 
 # Copy application files
 COPY server.js .
